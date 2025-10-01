@@ -4,7 +4,7 @@ import (
 	"regexp"
 
 	"github.com/arun14k08/finance_tracker_server/pkg/context"
-	"github.com/arun14k08/finance_tracker_server/pkg/models"
+	"github.com/arun14k08/finance_tracker_server/pkg/db"
 	"github.com/arun14k08/finance_tracker_server/pkg/serializers"
 	"github.com/arun14k08/goframework/framework"
 	"github.com/gofiber/fiber/v2"
@@ -16,6 +16,7 @@ func GetUserContext(userReq *serializers.UserRequest, fiberCtx *fiber.Ctx) conte
 	var appCtx  context.AppContext
 	passwordHash, err := GetPasswordHash(userReq.Password)
 	if err != nil {
+		
 		framework.InternalError(fiberCtx)
 	}
 
@@ -48,23 +49,29 @@ func IsStrongPassword(password string) bool {
 	return hasUpper && hasLower && hasDigit && hasSpecial
 }
 
-func GetUserContextWithModel(userModel *models.User, fiberCtx *fiber.Ctx) context.AppContext {
+func GetUserContextWithUser(user db.User, fiberCtx *fiber.Ctx) context.AppContext {
 	var appCtx  context.AppContext
-	passwordHash, err := GetPasswordHash(userModel.PassWord)
-	if err != nil {
-		framework.InternalError(fiberCtx)
-	}
-	appCtx.SetFiberCtx(fiberCtx)
 	appCtx.SetUser(context.User{
-		Name: userModel.Name,
-		Email: userModel.Email,
-		PassWord: userModel.PassWord,
-		PasswordHash: passwordHash,
-		Role: userModel.Role,
-		CreatedAt: userModel.CreatedAt,
-		UpdatedAt: userModel.UpdatedAt,
-	})	
+		ID: user.ID,
+		Name: user.Name,
+		Email: user.Email,
+		Role: user.Role,
+		CreatedAt: user.CreatedAt.Time.UnixMilli(),
+		UpdatedAt: user.UpdatedAt.Time.UnixMilli(),
+	})
+	appCtx.SetFiberCtx(fiberCtx)
 	return appCtx
+}
+
+func SetUserContextWithModel(user db.CreateUserRow, appCtx *context.AppContext) {
+	appCtx.SetUser(context.User{
+		ID: user.ID,
+		Name: user.Name,
+		Email: user.Email,
+		Role: user.Role,
+		CreatedAt: user.CreatedAt.Time.UnixMilli(),
+		UpdatedAt: user.UpdatedAt.Time.UnixMilli(),
+	})
 }
 
 func GetPasswordHash(password string) (string, error) {

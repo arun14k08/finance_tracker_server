@@ -1,22 +1,24 @@
 package handlers
 
 import (
+	"log"
 	"strconv"
 
-	"github.com/arun14k08/finance_tracker_server/pkg/handlers/utils"
 	"github.com/arun14k08/finance_tracker_server/pkg/serializers"
 	"github.com/arun14k08/finance_tracker_server/pkg/services"
+	"github.com/arun14k08/finance_tracker_server/pkg/utils"
 	"github.com/arun14k08/goframework/framework"
 	"github.com/gofiber/fiber/v2"
 )
 
 func CreateUser(fiberCtx *fiber.Ctx) error {
+	log.Printf("Hitting /users POST")
 	userReq := new(serializers.UserRequest)
 	if err := fiberCtx.BodyParser(userReq); err != nil {
 		return framework.BadRequest(fiberCtx, "Bad Request")
 	}
-
-	appCtx, ok := services.CreateUser(utils.GetUserContext(userReq, fiberCtx))
+	appCtx := utils.GetUserContext(userReq, fiberCtx)
+	ok := services.CreateUser(&appCtx)
 	if !ok {
 		return nil
 	}
@@ -37,7 +39,10 @@ func GetUser(fiberCtx *fiber.Ctx) error {
 	if err != nil {
         return framework.BadRequest(fiberCtx, "Invalid user ID")
     }
-	appCtx := services.GetUser(userID, fiberCtx)
+	appCtx, OK := services.GetUser(userID, fiberCtx)
+	if !OK {
+		return nil
+	}
 
 	framework.Success(appCtx.GetFiberCtx(), serializers.UserCreateResponse{
 			ID: appCtx.GetUser().ID,

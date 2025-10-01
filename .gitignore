@@ -1,2 +1,6 @@
+.vscode/
+tmp/
+vendor/
+
 finance_tracker_server
 .env

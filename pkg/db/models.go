@@ -13,7 +13,7 @@ type User struct {
 	Name         string
 	Email        string
 	PasswordHash string
-	Role         sql.NullString
+	Role         string
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
 }
