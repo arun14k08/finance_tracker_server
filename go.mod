@@ -27,5 +27,3 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 )
-
-replace github.com/arun14k08/goframework => ../goframework
