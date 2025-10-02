@@ -16,7 +16,6 @@ func CreateAccount(appCtx *context.AppContext) (ok bool) {
 	currentReq := appCtx.GetRequest().(*serializers.CreateAccountRequest)
 	// validate required fields
 	utils.GetAccountsForUser(appCtx, appCtx.GetUser().ID)
-	log.Print(currentReq)
 	// check for duplicate account based on bank_name and last_four
 	ALreadyExists, err := db.DBConnector.GetAccountByBankAndLastFour(appCtx.GetFiberCtx().Context(), db.GetAccountByBankAndLastFourParams{
 		BankName: currentReq.BankName,
@@ -27,8 +26,6 @@ func CreateAccount(appCtx *context.AppContext) (ok bool) {
 		framework.InternalError(appCtx.GetFiberCtx())
 		return false
 	}
-	log.Println("Duplicate account check:", ALreadyExists)
-	log.Print(ALreadyExists.ID != 0 )
 	if ALreadyExists.ID != 0 {
 		framework.BadRequest(appCtx.GetFiberCtx(), "Account with the same bank name and last four digits already exists")
 		return false
@@ -191,8 +188,6 @@ func UpdateAccount(appCtx *context.AppContext) (ok bool) {
 		framework.InternalError(appCtx.GetFiberCtx())
 		return false
 	}
-	log.Println("Duplicate account check:", ALreadyExists)
-	log.Print(ALreadyExists.ID != 0 )
 	if ALreadyExists.ID != 0 {
 		framework.BadRequest(appCtx.GetFiberCtx(), "Account with the same bank name and last four digits already exists")
 		return false
