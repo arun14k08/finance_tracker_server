@@ -6,7 +6,13 @@ package db
 
 import (
 	"database/sql"
+	"time"
 )
+
+type TokenBlacklist struct {
+	Jti       string
+	ExpiresAt time.Time
+}
 
 type User struct {
 	ID           int64

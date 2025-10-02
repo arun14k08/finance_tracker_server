@@ -12,12 +12,11 @@ import (
 )
 
 
-func GetUserContext(userReq *serializers.UserRequest, fiberCtx *fiber.Ctx) context.AppContext{
+func GetUserContext(userReq *serializers.UserCreateRequest, fiberCtx *fiber.Ctx) context.AppContext{
 	var appCtx  context.AppContext
 	passwordHash, err := GetPasswordHash(userReq.Password)
 	if err != nil {
-		
-		framework.InternalError(fiberCtx)
+		framework.BadRequest(fiberCtx, "Check your password and try again")
 	}
 
 	appCtx.SetUser(context.User{
@@ -81,4 +80,12 @@ func GetPasswordHash(password string) (string, error) {
 	}
 	return string(passwordHash), nil
 }
+
+func CheckPassword(password string, passwordHash string) (OK bool){
+	err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password))
+	if err != nil {
+		return false
+	}
+	return true
+} 
 

@@ -7,3 +7,8 @@ type UserCreateResponse struct {
 	Role     string `json:"role"`
 	CreatedAt int64 `json:"created_at"`
 }
+
+type UserLoginResponse struct {
+	SignedToken string `json:"token"`
+	ExpiresAt int64 `json:"expires_at"`
+}
