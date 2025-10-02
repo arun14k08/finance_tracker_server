@@ -7,11 +7,56 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/sqlc-dev/pqtype"
 )
+
+type Account struct {
+	ID          int64
+	UserID      int64
+	Name        string
+	Balance     string
+	AccountType sql.NullString
+	Currency    sql.NullString
+	BankName    sql.NullString
+	LastFour    sql.NullString
+	IsActive    sql.NullBool
+	Nickname    sql.NullString
+	Notes       sql.NullString
+	CreatedAt   sql.NullTime
+	UpdatedAt   sql.NullTime
+}
+
+type Merchant struct {
+	ID        int64
+	Name      string
+	Category  sql.NullString
+	Website   sql.NullString
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+}
 
 type TokenBlacklist struct {
 	Jti       string
 	ExpiresAt time.Time
+}
+
+type Transaction struct {
+	ID               int64
+	AccountID        int64
+	Amount           string
+	Type             string
+	Description      sql.NullString
+	Category         sql.NullString
+	Status           sql.NullString
+	ReferenceID      sql.NullString
+	Metadata         pqtype.NullRawMessage
+	InitiatedByUser  sql.NullBool
+	RelatedAccountID sql.NullInt64
+	IsSelfTransfer   sql.NullBool
+	MerchantID       sql.NullInt64
+	CreatedAt        sql.NullTime
+	UpdatedAt        sql.NullTime
 }
 
 type User struct {
@@ -22,4 +67,12 @@ type User struct {
 	Role         string
 	CreatedAt    sql.NullTime
 	UpdatedAt    sql.NullTime
+}
+
+type UserMerchant struct {
+	ID         int64
+	UserID     int64
+	MerchantID int64
+	LastUsed   sql.NullTime
+	UsageCount sql.NullInt32
 }
