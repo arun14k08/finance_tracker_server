@@ -3,7 +3,7 @@ module github.com/arun14k08/finance_tracker_server
 go 1.25.1
 
 require (
-	github.com/arun14k08/goframework v0.0.0
+	github.com/arun14k08/goframework v0.1.0
 	github.com/gofiber/contrib/jwt v1.1.2
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/golang-jwt/jwt/v5 v5.2.2
