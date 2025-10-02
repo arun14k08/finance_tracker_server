@@ -21,8 +21,8 @@ type CreateAccountParams struct {
 	Name        string
 	AccountType sql.NullString
 	Currency    sql.NullString
-	BankName    sql.NullString
-	LastFour    sql.NullString
+	BankName    string
+	LastFour    string
 	Nickname    sql.NullString
 	Notes       sql.NullString
 }
@@ -38,6 +38,47 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.Nickname,
 		arg.Notes,
 	)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Balance,
+		&i.AccountType,
+		&i.Currency,
+		&i.BankName,
+		&i.LastFour,
+		&i.IsActive,
+		&i.Nickname,
+		&i.Notes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteAccount = `-- name: DeleteAccount :exec
+DELETE FROM accounts
+WHERE id = $1
+`
+
+func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteAccount, id)
+	return err
+}
+
+const getAccountByBankAndLastFour = `-- name: GetAccountByBankAndLastFour :one
+SELECT id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at FROM accounts
+WHERE bank_name = $1 AND last_four = $2
+`
+
+type GetAccountByBankAndLastFourParams struct {
+	BankName string
+	LastFour string
+}
+
+func (q *Queries) GetAccountByBankAndLastFour(ctx context.Context, arg GetAccountByBankAndLastFourParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByBankAndLastFour, arg.BankName, arg.LastFour)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -83,13 +124,13 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (Account, error)
 	return i, err
 }
 
-const getAccountsByUser = `-- name: GetAccountsByUser :many
+const getAccountsByUserId = `-- name: GetAccountsByUserId :many
 SELECT id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at FROM accounts
 WHERE user_id = $1
 `
 
-func (q *Queries) GetAccountsByUser(ctx context.Context, userID int64) ([]Account, error) {
-	rows, err := q.db.QueryContext(ctx, getAccountsByUser, userID)
+func (q *Queries) GetAccountsByUserId(ctx context.Context, userID int64) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, getAccountsByUserId, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,4 +164,58 @@ func (q *Queries) GetAccountsByUser(ctx context.Context, userID int64) ([]Accoun
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAccount = `-- name: UpdateAccount :one
+UPDATE accounts
+SET name = COALESCE($2, name),
+    account_type = COALESCE($3, account_type),
+    currency = COALESCE($4, currency),
+    bank_name = COALESCE($5, bank_name),
+    last_four = COALESCE($6, last_four),
+    nickname = COALESCE($7, nickname),
+    notes = COALESCE($8, notes)
+WHERE id = $1
+RETURNING id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at
+`
+
+type UpdateAccountParams struct {
+	ID          int64
+	Name        string
+	AccountType sql.NullString
+	Currency    sql.NullString
+	BankName    string
+	LastFour    string
+	Nickname    sql.NullString
+	Notes       sql.NullString
+}
+
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, updateAccount,
+		arg.ID,
+		arg.Name,
+		arg.AccountType,
+		arg.Currency,
+		arg.BankName,
+		arg.LastFour,
+		arg.Nickname,
+		arg.Notes,
+	)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Balance,
+		&i.AccountType,
+		&i.Currency,
+		&i.BankName,
+		&i.LastFour,
+		&i.IsActive,
+		&i.Nickname,
+		&i.Notes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

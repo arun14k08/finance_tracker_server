@@ -10,7 +10,7 @@ import (
 	"github.com/arun14k08/goframework/framework"
 	"github.com/gofiber/fiber/v2"
 )
-func CreateUser(appCtx *context.AppContext) (bool) {
+func CreateUser(appCtx *context.AppContext) (ok bool) {
 	user := appCtx.GetUser()
 	// Email validation
 	if !utils.IsValidEmail(user.Email) {
@@ -70,14 +70,14 @@ func CreateUser(appCtx *context.AppContext) (bool) {
 
 
 
-func GetUser(userId int64, fiberCtx *fiber.Ctx) (context.AppContext, bool) {
+func GetUser(userId int64, fiberCtx *fiber.Ctx) (*context.AppContext, bool) {
 	userRow, err := db.DBConnector.GetUserById(fiberCtx.Context(), userId)
 	if err != nil {
 		framework.InternalError(fiberCtx)
 	}
 	if userRow.ID == 0 {
 		framework.BadRequest(fiberCtx, "User ID is invalid")
-		return context.AppContext{}, false
+		return &context.AppContext{}, false
 	}
 	return  utils.GetUserContextWithUser(userRow, fiberCtx), true
 }

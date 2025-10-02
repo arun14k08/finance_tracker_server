@@ -18,8 +18,8 @@ type Account struct {
 	Balance     string
 	AccountType sql.NullString
 	Currency    sql.NullString
-	BankName    sql.NullString
-	LastFour    sql.NullString
+	BankName    string
+	LastFour    string
 	IsActive    sql.NullBool
 	Nickname    sql.NullString
 	Notes       sql.NullString

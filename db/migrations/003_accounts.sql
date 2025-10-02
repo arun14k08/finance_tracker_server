@@ -7,13 +7,14 @@ CREATE TABLE accounts (
     balance NUMERIC(15,2) DEFAULT 0.0 NOT NULL,
     account_type TEXT DEFAULT 'bank', -- bank, card, wallet, crypto
     currency TEXT DEFAULT 'USD',
-    bank_name TEXT,
-    last_four CHAR(4),
+    bank_name TEXT NOT NULL,
+    last_four CHAR(4) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     nickname TEXT,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(bank_name, last_four)
 );
 
 -- Index for faster lookup

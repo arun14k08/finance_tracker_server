@@ -24,7 +24,7 @@ func CreateUser(fiberCtx *fiber.Ctx) error {
 		return framework.BadRequest(fiberCtx, "Bad Request")
 	}
 	appCtx := utils.GetUserContext(userReq, fiberCtx)
-	ok := services.CreateUser(&appCtx)
+	ok := services.CreateUser(appCtx)
 	if !ok {
 		return nil
 	}

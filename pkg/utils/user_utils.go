@@ -8,11 +8,12 @@ import (
 	"github.com/arun14k08/finance_tracker_server/pkg/serializers"
 	"github.com/arun14k08/goframework/framework"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 
-func GetUserContext(userReq *serializers.UserCreateRequest, fiberCtx *fiber.Ctx) context.AppContext{
+func GetUserContext(userReq *serializers.UserCreateRequest, fiberCtx *fiber.Ctx) *context.AppContext {
 	var appCtx  context.AppContext
 	passwordHash, err := GetPasswordHash(userReq.Password)
 	if err != nil {
@@ -27,7 +28,7 @@ func GetUserContext(userReq *serializers.UserCreateRequest, fiberCtx *fiber.Ctx)
 		Role: userReq.Role,
 	})
 	appCtx.SetFiberCtx(fiberCtx)
-	return appCtx
+	return &appCtx
 }
 
 func IsValidEmail(email string) bool {
@@ -48,8 +49,8 @@ func IsStrongPassword(password string) bool {
 	return hasUpper && hasLower && hasDigit && hasSpecial
 }
 
-func GetUserContextWithUser(user db.User, fiberCtx *fiber.Ctx) context.AppContext {
-	var appCtx  context.AppContext
+func GetUserContextWithUser(user db.User, fiberCtx *fiber.Ctx) *context.AppContext {
+	appCtx := &context.AppContext{}
 	appCtx.SetUser(context.User{
 		ID: user.ID,
 		Name: user.Name,
@@ -89,3 +90,35 @@ func CheckPassword(password string, passwordHash string) (OK bool){
 	return true
 } 
 
+func GetUserClaims(fiberCtx *fiber.Ctx) jwt.Claims {
+	user := fiberCtx.Locals("user").(*jwt.Token)
+    return user.Claims.(jwt.MapClaims)
+}
+
+func GetCurrentUserID(fiberCtx *fiber.Ctx) (userID int64, ok bool) {
+	user := fiberCtx.Locals("user").(*jwt.Token)
+	if user == nil {
+		framework.BadRequest(fiberCtx, "Invalid Credentials")
+		return 0, false
+	}
+    claims := user.Claims.(jwt.MapClaims)
+    userId, ok := claims["user_id"].(float64)
+	if !ok {
+		framework.BadRequest(fiberCtx, "Invalid Credentials")
+		return  0, false
+	}
+	return int64(userId), true
+}
+
+func GetCurrentUserContext(fiberCtx *fiber.Ctx) (ctxRes *context.AppContext, ok bool ){
+	userID, ok := GetCurrentUserID(fiberCtx)
+	if !ok {
+		framework.UnAuthorized(fiberCtx, "Invalid Credentials")
+		return &context.AppContext{}, ok
+	}
+	userModel, err := db.DBConnector.GetUserById(fiberCtx.Context(),userID)
+	if err != nil {
+		framework.InternalError(fiberCtx)
+	}
+	return GetUserContextWithUser(userModel, fiberCtx), true
+}

@@ -31,10 +31,18 @@ func main() {
 	}))
 	// logger middleware
 	app.Use(logger.New())
+
 	// routes
 	app.Post("/register", handlers.CreateUser)
 	app.Post("/login", handlers.LoginUser)
 	app.Post("/api/logout", handlers.LogoutUser)
+
+	app.Get("/api/accounts/:id", handlers.GetAccountByID)
+	app.Get("/api/accounts", handlers.GetAccounts)
+	app.Post("/api/accounts", handlers.CreateAccount)
+	app.Patch("/api/accounts", handlers.UpdateAccount)
+	app.Delete("/api/accounts/:id", handlers.DeleteAccount)
+
 
 	// cron jobs
 	handlers.HandleBlackListCleanUp(time.Hour)

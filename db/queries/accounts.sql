@@ -7,6 +7,27 @@ RETURNING *;
 SELECT * FROM accounts
 WHERE id = $1;
 
--- name: GetAccountsByUser :many
+-- name: GetAccountsByUserId :many
 SELECT * FROM accounts
 WHERE user_id = $1;
+
+
+-- name: GetAccountByBankAndLastFour :one
+SELECT * FROM accounts
+WHERE bank_name = $1 AND last_four = $2;
+
+-- name: UpdateAccount :one
+UPDATE accounts
+SET name = COALESCE($2, name),
+    account_type = COALESCE($3, account_type),
+    currency = COALESCE($4, currency),
+    bank_name = COALESCE($5, bank_name),
+    last_four = COALESCE($6, last_four),
+    nickname = COALESCE($7, nickname),
+    notes = COALESCE($8, notes)
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteAccount :exec
+DELETE FROM accounts
+WHERE id = $1;
