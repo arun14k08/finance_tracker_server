@@ -31,7 +31,8 @@ func main() {
 			config.AppProp.FrontendUrl = "http://localhost:5173"
 		} else {
 			// fallback - better to fail fast
-			log.Fatal("FRONTEND_URL must be set in production")
+			// log.Fatal("FRONTEND_URL must be set in production")
+			// todo: need to un comment above line after deploying front-end
 		}
 	}
 
