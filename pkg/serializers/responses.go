@@ -9,6 +9,8 @@ type UserCreateResponse struct {
 }
 
 type UserLoginResponse struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
 	SignedToken string `json:"token"`
 	ExpiresAt int64 `json:"expires_at"`
 }
@@ -27,4 +29,5 @@ type CreateAccountResponse struct {
 	Notes string `json:"notes,omitempty"`
 	CreatedAt int64 `json:"created_at"`
 	UpdatedAt int64 `json:"updated_at"`
+	IsDefaultAccount bool `json:"is_default_account"`
 }

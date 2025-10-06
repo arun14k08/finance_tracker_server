@@ -39,6 +39,8 @@ func CreateAccount(appCtx *context.AppContext) (ok bool) {
 		return false
 	}
 
+	sanitizedBalance := utils.FormatAmount(currentReq.Balance)
+
 	accountModel, err := db.DBConnector.CreateAccount(appCtx.GetFiberCtx().Context(), db.CreateAccountParams{
 		Name:  currentReq.Name,
 		UserID: appCtx.GetUser().ID,
@@ -48,6 +50,7 @@ func CreateAccount(appCtx *context.AppContext) (ok bool) {
 		LastFour: currentReq.LastFour,
 		Nickname: sql.NullString{String: currentReq.NickName, Valid: currentReq.NickName != ""},
 		Notes: sql.NullString{String: currentReq.Notes, Valid: currentReq.Notes != ""},
+		Balance: sanitizedBalance,
 	})
 
 	// need to add the created account to the context
@@ -93,6 +96,7 @@ func GetAccounts(appCtx *context.AppContext) (ok bool) {
 			IsActive: account.IsActive,
 			NickName: account.NickName,
 			Notes: account.Notes,
+			IsDefaultAccount: utils.IsDefaultAccount(appCtx, account.ID),
 			CreatedAt: account.CreatedAt,
 			UpdatedAt: account.UpdatedAt,
 		})
@@ -126,6 +130,7 @@ func GetAccountByID(appCtx *context.AppContext, accountID int64) (ok bool) {
 		Currency: account.Currency.String,
 		LastFour: account.LastFour,
 		IsActive: account.IsActive.Bool,
+		IsDefaultAccount: utils.IsDefaultAccount(appCtx, account.ID),
 		NickName: account.Nickname.String,
 		Notes: account.Notes.String,
 		CreatedAt: account.CreatedAt.Time.Unix(),
@@ -155,6 +160,11 @@ func UpdateAccount(appCtx *context.AppContext) (ok bool) {
 		return false
 	}
 
+	if utils.IsDefaultAccountByTypeAndLastFour(existingAccount.AccountType.String, existingAccount.LastFour) {
+		framework.BadRequest(appCtx.GetFiberCtx(), "Default account cannot be updated")
+		return false
+	}
+
 	// Update fields if they are provided in the request
 	if currentReq.Name != "" {
 		existingAccount.Name = currentReq.Name
@@ -177,18 +187,22 @@ func UpdateAccount(appCtx *context.AppContext) (ok bool) {
 	if currentReq.Notes != "" {
 		existingAccount.Notes = sql.NullString{String: currentReq.Notes, Valid: true}
 	}
+	if currentReq.IsActive != existingAccount.IsActive.Bool {
+		existingAccount.IsActive = sql.NullBool{Bool: currentReq.IsActive, Valid: true}
+	}
 
 	// check for duplicate account based on bank_name and last_four
 	ALreadyExists, err := db.DBConnector.GetAccountByBankAndLastFour(appCtx.GetFiberCtx().Context(), db.GetAccountByBankAndLastFourParams{
 		BankName: currentReq.BankName,
 		LastFour: currentReq.LastFour,
+		UserID: appCtx.GetUser().ID,
 	})
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("Error checking for duplicate account:", err)
 		framework.InternalError(appCtx.GetFiberCtx())
 		return false
 	}
-	if ALreadyExists.ID != 0 {
+	if ALreadyExists.ID != currentReq.ID {
 		framework.BadRequest(appCtx.GetFiberCtx(), "Account with the same bank name and last four digits already exists")
 		return false
 	}
@@ -202,6 +216,8 @@ func UpdateAccount(appCtx *context.AppContext) (ok bool) {
 		LastFour: existingAccount.LastFour,
 		Nickname: existingAccount.Nickname,
 		Notes: existingAccount.Notes,
+		IsActive: existingAccount.IsActive,
+		IsDefaultAccount: utils.IsDefaultAccount(appCtx, existingAccount.ID),
 	})
 	if err != nil {
 		log.Println("Error updating account:", err)

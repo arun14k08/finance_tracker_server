@@ -65,6 +65,23 @@ func CreateUser(appCtx *context.AppContext) (ok bool) {
 		return false
 	}
 	utils.SetUserContextWithModel(userRow, appCtx)
+	accountRow, err := db.DBConnector.CreateAccount(appCtx.GetFiberCtx().Context(), db.CreateAccountParams{
+		Name:  "Cash",
+		UserID: appCtx.GetUser().ID,
+		AccountType: sql.NullString{String: "cash", Valid: true},
+		Currency: sql.NullString{String: "INR", Valid: true},
+		BankName: "",
+		LastFour: "0000",
+		Nickname: sql.NullString{String: "Cash Account", Valid: true},
+		Notes: sql.NullString{String: "Initial deposit", Valid: true},
+		Balance: "0",
+	})
+	if err != nil {
+		log.Default().Println("Error creating account:", err.Error())
+		framework.InternalError(appCtx.GetFiberCtx())
+		return false
+	}
+	log.Default().Println(accountRow.ID)
 	return true
 }
 

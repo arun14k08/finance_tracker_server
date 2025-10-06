@@ -66,6 +66,7 @@ func GetAccountByID(fiberCtx *fiber.Ctx) error {
 func UpdateAccount(fiberCtx *fiber.Ctx) error {
 	req := new(serializers.UpdateAccountRequest)
 	if err := fiberCtx.BodyParser(req); err != nil {
+		log.Default().Print(req, err)
 		return framework.BadRequest(fiberCtx, "Invalid request body")
 	}
 	appCtx, ok := utils.GetCurrentUserContext(fiberCtx)

@@ -18,9 +18,10 @@ type CreateAccountRequest struct {
 	Currency    string `json:"currency"`
 	BankName    string `json:"bank_name"`
 	LastFour    string `json:"last_four"`
-	Balance     int64  `json:"balance"`
+	Balance     float64 `json:"balance"`
 	NickName    string `json:"nick_name,omitempty"`
 	Notes       string `json:"notes,omitempty"`
+	IsActive    bool   `json:"is_active,omitempty"`
 }
 
 type UpdateAccountRequest struct {
@@ -32,5 +33,5 @@ type UpdateAccountRequest struct {
 	LastFour    string `json:"last_four,omitempty"`
 	NickName    string `json:"nick_name,omitempty"`
 	Notes       string `json:"notes,omitempty"`
-	IsActive    *bool  `json:"is_active,omitempty"`
+	IsActive    bool  `json:"is_active,omitempty"`
 }

@@ -11,8 +11,8 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (user_id, name, account_type, currency, bank_name, last_four, nickname, notes)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8 )
+INSERT INTO accounts (user_id, name, account_type, currency, bank_name, last_four, nickname, notes, balance)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at
 `
 
@@ -25,6 +25,7 @@ type CreateAccountParams struct {
 	LastFour    string
 	Nickname    sql.NullString
 	Notes       sql.NullString
+	Balance     string
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
@@ -37,6 +38,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.LastFour,
 		arg.Nickname,
 		arg.Notes,
+		arg.Balance,
 	)
 	var i Account
 	err := row.Scan(
@@ -69,16 +71,17 @@ func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 
 const getAccountByBankAndLastFour = `-- name: GetAccountByBankAndLastFour :one
 SELECT id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at FROM accounts
-WHERE bank_name = $1 AND last_four = $2
+WHERE bank_name = $1 AND last_four = $2 AND user_id = $3
 `
 
 type GetAccountByBankAndLastFourParams struct {
 	BankName string
 	LastFour string
+	UserID   int64
 }
 
 func (q *Queries) GetAccountByBankAndLastFour(ctx context.Context, arg GetAccountByBankAndLastFourParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, getAccountByBankAndLastFour, arg.BankName, arg.LastFour)
+	row := q.db.QueryRowContext(ctx, getAccountByBankAndLastFour, arg.BankName, arg.LastFour, arg.UserID)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -174,7 +177,8 @@ SET name = COALESCE($2, name),
     bank_name = COALESCE($5, bank_name),
     last_four = COALESCE($6, last_four),
     nickname = COALESCE($7, nickname),
-    notes = COALESCE($8, notes)
+    notes = COALESCE($8, notes),
+    is_active = COALESCE($9, is_active)
 WHERE id = $1
 RETURNING id, user_id, name, balance, account_type, currency, bank_name, last_four, is_active, nickname, notes, created_at, updated_at
 `
@@ -188,6 +192,8 @@ type UpdateAccountParams struct {
 	LastFour    string
 	Nickname    sql.NullString
 	Notes       sql.NullString
+	IsActive    sql.NullBool
+	IsDefaultAccount bool
 }
 
 func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
@@ -200,6 +206,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (A
 		arg.LastFour,
 		arg.Nickname,
 		arg.Notes,
+		arg.IsActive,
 	)
 	var i Account
 	err := row.Scan(

@@ -97,13 +97,14 @@ func LoginUser(fiberCtx *fiber.Ctx) error {
 	return framework.Success(fiberCtx, serializers.UserLoginResponse{
 		SignedToken: signedToken,
 		ExpiresAt: sessionExpiresAt,
+		Name: user.Name,
+		Email: user.Email,
 	})
 
 }
 
 func LogoutUser(fiberCtx *fiber.Ctx) error{
 	user := fiberCtx.Locals("user").(*jwt.Token)
-	log.Print("User ", user )
     claims := user.Claims.(jwt.MapClaims)
 
     jti, ok := claims["jti"].(string)

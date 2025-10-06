@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-
 	"github.com/arun14k08/finance_tracker_server/pkg/context"
 	"github.com/arun14k08/finance_tracker_server/pkg/db"
 	"github.com/arun14k08/goframework/framework"
@@ -88,4 +87,23 @@ func RemoveAccountFromCtx(ctx *context.AppContext, accountID int64) {
 		}
 	}
 	ctx.SetAccounts(accounts)
+}
+
+func IsDefaultAccount(ctx *context.AppContext, accountID int64) bool {
+	accounts := ctx.GetAccounts()
+	if len(accounts) == 0 {
+		return false
+	}
+	// find the account with the given ID and check if account type is "Cash"
+	for _, account := range accounts {
+		if account.ID == accountID {
+			return account.AccountType == "cash" && account.LastFour == "0000"
+		}
+	}
+	// fmt.Print("No default account found")
+	return false
+}
+
+func IsDefaultAccountByTypeAndLastFour(accType string, lastFour string) bool {
+	return accType == "cash" && lastFour == "0000"
 }
